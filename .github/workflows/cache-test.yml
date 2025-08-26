@@ -40,3 +40,9 @@ jobs:
       with:
         path: cache-data
         key: test-cache-${{ github.sha }}-${{ github.run_id }}
+
+    - name: cache test data with same key
+      uses: actions/cache/save@v4
+      with:
+        path: cache-data
+        key: test-cache-this-is-always-the-same
