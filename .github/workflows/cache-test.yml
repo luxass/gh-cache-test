@@ -1,0 +1,42 @@
+name: GitHub Cache Test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to run on'
+        required: false
+        default: 'main'
+        type: string
+
+jobs:
+  test-cache:
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout code
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.inputs.branch || github.ref }}
+
+    - name: create test files for caching
+      run: |
+        mkdir -p cache-data
+        echo "Test file 1 - $(date)" > cache-data/file1.txt
+        echo "Test file 2 - $(date)" > cache-data/file2.txt
+        echo '{"timestamp": "'$(date)'", "build": "123"}' > cache-data/metadata.json
+        mkdir -p cache-data/nested
+        echo "Nested content" > cache-data/nested/nested-file.txt
+        dd if=/dev/urandom bs=1024 count=100 of=cache-data/random-data.bin 2>/dev/null
+
+    - name: list files to be cached
+      run: |
+        echo "Files to be cached:"
+        find cache-data -type f -exec ls -lh {} \;
+
+    - name: cache test data
+      uses: actions/cache/save@v4
+      with:
+        path: cache-data
+        key: test-cache-${{ github.sha }}-${{ github.run_id }}
